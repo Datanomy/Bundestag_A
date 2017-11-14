@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.square {
+  shape-rendering: crispEdges;
+}
+
+.square:hover{
+  opacity: 0.6;
+}
+
+.dot {
+  stroke: #000;
+}
+
+#grid {
+  margin: 10px;
+  margin-top: 60px;
+}
+
+.box-view {
+  width: 200px; height: 200px;
+  float: left;
+  position: relative;
+  margin: 8px;
+  background-color:#AAA;
+}
+
+.box {
+  width: 100px; height: 100px;
+  padding: 5px;
+  background-color: #000;
+
+}
+
+
+</style>
+<body>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/0FCBC471-2111-E74D-BAB1-C3B74C6099E9/main.js" charset="UTF-8"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 900 - margin.top - margin.bottom;
+
+var square_length = 60;
+
+var square_margin = 5;
+
+var n_squares_in_row = 4;
+
+var l_scale = d3.scalePow().exponent(0.5)
+    .range([0, square_length])
+    .domain([0,1]);
+
+var color_CDU_CSU = "#706E6C";
+var color_SPD = "#FF3D38";
+var color_LINKE = "#B2275F";
+var color_GRUENE = "#6ED160";
+
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.csv("df_output.csv", function(error, data) {
+  if (error) throw error;
+
+  data.forEach(function(d,i) {
+    d.Name = d.Name;
+    d.Fraktion = d.Fraktion;
+    d.Anzahl_abgegebene_Stimmen = +d.Anzahl_abgegebene_Stimmen;
+    d.CDU_CSU_proz = +d.CDU_CSU_proz;
+    d.DIE_GRUENEN_proz = +d.DIE_GRUENEN_proz;
+    d.DIE_LINKE_proz = +d.DIE_LINKE_proz;
+    d.SPD_proz = +d.SPD_proz;
+    d.Proz_Abweichungen   = +d.Proz_Abweichungen;
+  });
+
+  var nestedData = d3.nest()
+    .key(function(d) {return d.Name})
+    .entries(data);
+
+  nestedData.forEach(function(d,i) {
+    var x = Math.floor(i % 4);
+    var y = Math.floor(i / 4);
+    d.x = x;
+    d.y = y;
+
+    
+  });
+
+  console.log(nestedData)
+
+  var smallcharts = d3.select("svg").selectAll("g.smallmultiples")
+  .data(nestedData)
+  .enter()
+  .append("g")
+  .attr("class","smallmultiples")
+  .attr("transform",function(d) {return "translate(" + (d.x * 250) + "," + (d.y * 250) + ")"});
+
+
+// Square 1
+
+  smallcharts.append("rect")
+    // .attr("transform-origin","50% 50%")
+    // .attr("transform","rotate(-45)")
+    .attr("x", 50)
+    .attr("y", 50)
+    .attr("height", square_length)
+    .attr("width", square_length)
+    .style("fill", "#996666")
+    .style("fill-opacity",0)
+    .style("stroke", "#D3D3D3")
+    .style("stroke-width", "0.7px");
+
+  var rect0 = smallcharts.selectAll("rect0_fill")
+    .data(function(d){return d.values;})
+    .enter()
+    .append("rect")
+    .attr("class","square")
+    .attr("x", function(d){return 50 + square_length - l_scale(d.SPD_proz)})
+    .attr("y", function(d){return 50 + square_length - l_scale(d.SPD_proz)})
+    .attr("height", function(d){return l_scale(d.SPD_proz)})
+    .attr("width", function(d){return l_scale(d.SPD_proz)})
+    .style("fill", color_SPD)
+    .style("fill-opacity",1);
+
+    // rect0.selectAll("text0")
+    // .data(function(d){return d.values})
+    // .enter()
+    // .append("text")
+    // .attr("text-anchor", "middle")
+    // .text(function(d){return d.SPD_proz});
+
+
+  smallcharts.append("rect")
+    // .attr("transform-origin","50% 50%")
+    // .attr("transform","rotate(-45)")
+    .attr("x", function(d){return 50 + square_length + square_margin})
+    .attr("y", function(d){return 50})
+    .attr("height", square_length)
+    .attr("width", square_length)
+    .style("fill", "#AA6666")
+    .style("fill-opacity",0)
+    .style("stroke", "#D3D3D3")
+    .style("stroke-width", "0.7px");
+
+  smallcharts.selectAll("rect1_fill")
+    .data(function(d){return d.values;})
+    .enter()
+    .append("rect")
+    .attr("class","square")
+    .attr("x", function(d){return 50 + square_length + square_margin})
+    .attr("y", function(d){return 50 + square_length - l_scale(d.CDU_CSU_proz)})
+    .attr("height", function(d){return l_scale(d.CDU_CSU_proz)})
+    .attr("width", function(d){return l_scale(d.CDU_CSU_proz)})
+    // .attr("transform-origin","right-bottom")
+    // .attr("transform","rotate(-90)")
+    .style("fill", color_CDU_CSU)
+    .style("fill-opacity",1)
+
+  smallcharts.append("rect")
+    // .attr("transform-origin","50% 50%")
+    // .attr("transform","rotate(-45)")
+    .attr("x", 50)
+    .attr("y", function(d){return 50 + square_length + square_margin})
+    .attr("height", square_length)
+    .attr("width", square_length)
+    .style("fill", "#AA6666")
+    .style("fill-opacity",0)
+    .style("stroke", "#D3D3D3")
+    .style("stroke-width", "0.7px");
+
+  smallcharts.selectAll("rect2_fill")
+    .data(function(d){return d.values;})
+    .enter()
+    .append("rect")
+    .attr("class","square")
+    .attr("x", function(d){return 50 + square_length - l_scale(d.DIE_LINKE_proz)})
+    .attr("y", function(d){return 50 + square_length + square_margin})
+    .attr("height", function(d){return l_scale(d.DIE_LINKE_proz)})
+    .attr("width", function(d){return l_scale(d.DIE_LINKE_proz)})
+    // .attr("transform-origin","right-bottom")
+    // .attr("transform","rotate(-90)")
+    .style("fill", color_LINKE)
+    .style("fill-opacity",1)
+
+  smallcharts.append("rect")
+    // .attr("transform-origin","50% 50%")
+    // .attr("transform","rotate(-45)")
+    .attr("x",function(d){return 50 + square_length + square_margin})
+    .attr("y", function(d){return 50 + square_length + square_margin})
+    .attr("height", square_length)
+    .attr("width", square_length)
+    .style("fill", "#AA6666")
+    .style("fill-opacity",0)
+    .style("stroke", "#D3D3D3")
+    .style("stroke-width", "0.7px");
+
+  smallcharts.selectAll("rect3_fill")
+    .data(function(d){return d.values;})
+    .enter()
+    .append("rect")
+    .attr("class","square")
+    .attr("x",function(d){return 50 + square_length + square_margin})
+    .attr("y", function(d){return 50 + square_length + square_margin})
+    .attr("height", function(d){return l_scale(d.DIE_GRUENEN_proz)})
+    .attr("width", function(d){return l_scale(d.DIE_GRUENEN_proz)})
+    .style("fill", color_GRUENE)
+    .style("fill-opacity",1)
+
+  smallcharts.selectAll("tag")
+    .data(function(d){return d.values;})
+    .enter()
+    .append("text")
+    .attr("x", 35)
+    .attr("y", 15)
+    .style("text-anchor", "center")
+    .attr("font-size","12px")
+    .text(function (d) {return d.Name + " (" + d.Fraktion + ")"});
+  
+});
+
+</script>
